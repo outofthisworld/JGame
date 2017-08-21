@@ -14,7 +14,12 @@ public class Player extends Entity {
 
     private final SpriteSheet playerSpriteSheet;
     private Vector2D velocity = new Vector2D(0, 0);
+    private Vector2D lastVelocity = new Vector2D(0, 0);
     private Sprite drawSprite;
+    /*
+        The movement speed of this character, in pixels per second.
+    */
+    private int movementSpeed = 100;
 
 
     /**
@@ -47,50 +52,53 @@ public class Player extends Entity {
 
     @Override
     public void render(GameRenderer g) {
-        getDrawSprite();
+        updateDrawSprite();
         g.renderSprite(drawSprite, (int) getPosition().getX(), (int) getPosition().getY());
     }
 
     private void updateVelocity(double deltaT) {
         if (KeyboardManager.isUpArrowPressed())
-            velocity.setY(-1);
+            velocity.setY(-movementSpeed).setX(0).multXY(deltaT);
 
         if (KeyboardManager.isDownArrowPressed())
-            velocity.setY(1);
+            velocity.setY(movementSpeed).setX(0).multXY(deltaT);
 
         if (KeyboardManager.isLeftArrowPressed())
-            velocity.setX(-1);
+            velocity.setX(-movementSpeed).setY(0).multXY(deltaT);
 
         if (KeyboardManager.isRightArrowPressed())
-            velocity.setX(1);
+            velocity.setX(movementSpeed).setY(0).multXY(deltaT);
 
         if (!KeyboardManager.isAnyArrowPressed())
             velocity.setX(0).setY(0);
     }
 
-    private void getDrawSprite() {
-
-        System.out.println("magnitude 0");
-        int angleNormalize = (int) velocity.getAngleDegreesNormalized();
-        System.out.println(velocity.getAngleDegrees());
-        switch (angleNormalize) {
+    private Sprite getSpriteForAngle(int angle) {
+        switch (angle) {
             case 0:
-                drawSprite = playerSpriteSheet.getSprite(3, 2);
-                break;
+                return playerSpriteSheet.getSprite(3, 2);
             case 90:
-                drawSprite = playerSpriteSheet.getSprite(0, 0);
-                break;
+                return playerSpriteSheet.getSprite(0, 0);
             case 180:
-                drawSprite = playerSpriteSheet.getSprite(3, 1);
-                break;
+                return playerSpriteSheet.getSprite(3, 1);
             case 270:
-                drawSprite = playerSpriteSheet.getSprite(0, 3);
-                break;
+                return playerSpriteSheet.getSprite(0, 3);
             default:
                 System.out.println("angle unknown");
                 break;
         }
+        return null;
+    }
 
+    private void updateDrawSprite() {
+        if (velocity.magnitude() > 0) {
+            int angleNormalize = (int) velocity.getAngleDegreesNormalized();
+            drawSprite = getSpriteForAngle(angleNormalize);
+            lastVelocity = velocity.copy();
+        } else if (lastVelocity != null) {
+            int angleNormalize = (int) lastVelocity.getAngleDegreesNormalized();
+            drawSprite = getSpriteForAngle(angleNormalize);
+        }
     }
 
     @Override

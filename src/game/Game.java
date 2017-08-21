@@ -12,6 +12,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.io.IOException;
 import java.util.concurrent.*;
+import java.util.logging.Logger;
 import java.util.stream.Stream;
 
 
@@ -19,6 +20,7 @@ import java.util.stream.Stream;
  * Created by SeventhSense on 8/18/2017.
  */
 public final class Game implements GameObject {
+    private static final Logger logger = Logger.getLogger(Game.class.getName());
 
     /*
         The singleton game object
@@ -71,18 +73,28 @@ public final class Game implements GameObject {
 
     private GameObject player;
 
+    private boolean initialized = false;
 
     private Game() {
-        System.out.println("in construct");
-        startGame();
     }
 
     /**
      * Get game.
      *
+     * Note that the game is initialized here due to game objects
+     * having to be created AFTER the game constructor has run.
+     *
+     * If objects are created within the Game constructor,
+     * they are unable to access to the Game singleton instance
+     * due to the game object still being constructed whilst the objects are created.
+     *
      * @return the game
      */
     public static Game get() {
+        if (!GAME.initialized) {
+            GAME.initialized = !GAME.initialized;
+            GAME.init();
+        }
         return GAME;
     }
 
@@ -100,24 +112,22 @@ public final class Game implements GameObject {
         }).parallel().forEach(r -> r.run());
     }
 
-    private final void startGame() {
-        CompletableFuture.runAsync(() -> {
-            System.out.println("initing " + Thread.currentThread().getName());
-            //Loads game resources in parallel.
-            loadResources();
+    private final void init() {
+        //Loads game resources in parallel.
+        loadResources();
 
-            screen.getFrame().addKeyListener(new KeyboardManager());
+        screen.getFrame().addKeyListener(new KeyboardManager());
 
-            //Start the game on the scheduled executor service.
-            gameStartTime = System.currentTimeMillis();
+        //Start the game on the scheduled executor service.
+        gameStartTime = System.currentTimeMillis();
 
-            player = new Player();
-            //Blocks the current thread and waits for any exceptions triggered on the game thread. Any game set-up should happen before
-            //this method is called.
-            //handleGameLoopExceptions();
-        }).whenCompleteAsync((aVoid, throwable) -> {
-            gameFuture = getGameService().scheduleAtFixedRate(this::tick, 0, 1000l / 60l, TimeUnit.MILLISECONDS);
-        });
+        player = new Player();
+
+        gameFuture = getGameService().scheduleAtFixedRate(this::tick, 0, 1000l / 60l, TimeUnit.MILLISECONDS);
+
+        //Blocks the current thread and waits for any exceptions triggered on the game thread. Any game set-up should happen before
+        //this method is called.
+        handleGameLoopExceptions();
     }
 
     public void render(GameRenderer g) {
@@ -188,7 +198,7 @@ public final class Game implements GameObject {
 
     private final void handleGameLoopExceptions() {
         try {
-            System.out.println(Thread.currentThread().getName() + " in handle game loop exceptions");
+            logger.info(Thread.currentThread().getName() + " thread - handling game loop exceptions.");
             gameFuture.get();
         } catch (Exception e) {
             e.printStackTrace();
