@@ -57,23 +57,47 @@ public class Player extends Entity {
     }
 
     private void updateVelocity(double deltaT) {
+        if (!KeyboardManager.isAnyArrowPressed()) {
+            velocity.setX(0).setY(0);
+        }
         if (KeyboardManager.isUpArrowPressed())
-            velocity.setY(-movementSpeed).setX(0).multXY(deltaT);
+            velocity.setXY(0, -movementSpeed).multXY(deltaT);
 
         if (KeyboardManager.isDownArrowPressed())
-            velocity.setY(movementSpeed).setX(0).multXY(deltaT);
+            velocity.setXY(0, movementSpeed).multXY(deltaT);
 
         if (KeyboardManager.isLeftArrowPressed())
-            velocity.setX(-movementSpeed).setY(0).multXY(deltaT);
+            velocity.setXY(-movementSpeed, 0).multXY(deltaT);
 
         if (KeyboardManager.isRightArrowPressed())
-            velocity.setX(movementSpeed).setY(0).multXY(deltaT);
+            velocity.setXY(movementSpeed, 0).multXY(deltaT);
 
-        if (!KeyboardManager.isAnyArrowPressed())
-            velocity.setX(0).setY(0);
     }
 
-    private Sprite getSpriteForAngle(int angle) {
+    public Sprite getMoveSprite(int angle) {
+        switch (angle) {
+            case 0:
+                Sprite[] sprites = new Sprite[]{
+                        playerSpriteSheet.getSprite(0, 2),
+                        playerSpriteSheet.getSprite(1, 2),
+                        playerSpriteSheet.getSprite(2, 2),
+                        playerSpriteSheet.getSprite(3, 2)
+                };
+                return sprites[0];
+            case 90:
+                return playerSpriteSheet.getSprite(0, 0);
+            case 180:
+                return playerSpriteSheet.getSprite(3, 1);
+            case 270:
+                return playerSpriteSheet.getSprite(0, 3);
+            default:
+                System.out.println("angle unknown");
+                break;
+        }
+        return null;
+    }
+
+    public Sprite getStandingSprite(int angle) {
         switch (angle) {
             case 0:
                 return playerSpriteSheet.getSprite(3, 2);
@@ -92,20 +116,20 @@ public class Player extends Entity {
 
     private void updateDrawSprite() {
         if (velocity.magnitude() > 0) {
-            int angleNormalize = (int) velocity.getAngleDegreesNormalized();
-            drawSprite = getSpriteForAngle(angleNormalize);
+            drawSprite = getMoveSprite((int) velocity.getAngleDegreesNormalized());
             lastVelocity = velocity.copy();
         } else if (lastVelocity != null) {
-            int angleNormalize = (int) lastVelocity.getAngleDegreesNormalized();
-            drawSprite = getSpriteForAngle(angleNormalize);
+            drawSprite = getStandingSprite((int) lastVelocity.getAngleDegreesNormalized());
         }
     }
 
     @Override
     public void update(double deltaT) {
         updateVelocity(deltaT);
+
         this.getPosition().add(velocity);
+
+        if (drawSprite != null)
+            getPosition().clampInclusive(0, Game.get().getGameWidth() - drawSprite.getWidth() - 20, 0, Game.get().getGameHeight() - drawSprite.getHeight() - 30);
     }
-
-
 }

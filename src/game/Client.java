@@ -23,7 +23,7 @@ public class Client {
         }
 
         System.out.println(System.getProperty("debug"));
-        if (System.getenv("DEBUG") == null && System.getProperty("debug") == null)
+        if (System.getenv("debug") == null && System.getProperty("debug") == null)
             LogManager.getLogManager().reset();
 
         log.log(Level.INFO, "Logging on : {0}", true);

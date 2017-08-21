@@ -400,6 +400,12 @@ public class Vector2D {
         return setX(v.x).setY(v.y);
     }
 
+    public Vector2D setXY(int x, int y) {
+        this.x = x;
+        this.y = y;
+        return this;
+    }
+
     /**
      * Gets x.
      *
@@ -440,10 +446,21 @@ public class Vector2D {
         return this;
     }
 
-    @Override
-    public String toString() {
-        return "(" + this.x + "," + this.y + ")";
+    public Vector2D clampInclusive(int xMin, int xMax, int yMin, int yMax) {
+        if (this.x <= xMin) this.x = xMin;
+        if (this.x >= xMax) this.x = xMax;
+        if (this.y <= yMin) this.y = yMin;
+        if (this.y >= yMax) this.y = yMax;
+
+        return this;
     }
+
+    public Vector2D clampExclusive(int xMin, int xMax, int yMin, int yMax) {
+        this.x = this.x < xMin ? xMin : this.x > xMax ? xMax : this.x;
+        this.y = this.x < yMin ? xMin : this.y > yMax ? yMax : this.y;
+        return this;
+    }
+
 
     @Override
     public boolean equals(Object obj) {

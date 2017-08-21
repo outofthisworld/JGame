@@ -6,6 +6,7 @@ import display.Screen;
 import entity.GameObject;
 import entity.Player;
 import input.KeyboardManager;
+import input.MouseManager;
 import sprites.SpriteSheetManager;
 
 import javax.swing.*;
@@ -26,10 +27,12 @@ public final class Game implements GameObject {
         The singleton game object
      */
     private static final Game GAME = new Game();
+    private final int GAME_WIDTH = 800;
+    private final int GAME_HEIGHT = 600;
     /*
         The game screen
     */
-    private final Screen screen = new Screen("Game", 800, 600);
+    private final Screen screen = new Screen("Game", GAME_WIDTH, GAME_HEIGHT);
     /*
         The renderer which draws to the screen, provides convenience methods on top of the graphics2D object specific to this game.
     */
@@ -116,7 +119,9 @@ public final class Game implements GameObject {
         //Loads game resources in parallel.
         loadResources();
 
-        screen.getFrame().addKeyListener(new KeyboardManager());
+        screen.getCanvas().requestFocus();
+        screen.getCanvas().addKeyListener(new KeyboardManager());
+        screen.getCanvas().addMouseListener(new MouseManager());
 
         //Start the game on the scheduled executor service.
         gameStartTime = System.currentTimeMillis();
@@ -157,6 +162,14 @@ public final class Game implements GameObject {
         update(deltaTime);
         render(gameRenderer);
         return 1;
+    }
+
+    public int getGameWidth() {
+        return this.GAME_WIDTH;
+    }
+
+    public int getGameHeight() {
+        return this.GAME_HEIGHT;
     }
 
     /**
